@@ -5,10 +5,19 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
 
-# My views
+# My moduls
 
 from . models import Topic, Entry
 from . forms import TopicForm, EntryForm
+
+# help functions
+
+def check_topic_owner(request, topic):
+    """Check owner of topic."""
+    if topic.owner != request.user:
+        raise Http404
+
+# My views functions
 
 def index(request):
     """The home page for learning log"""
@@ -29,6 +38,7 @@ def topic(request, topic_id):
     topic = get_object_or_404(Topic, id=topic_id)
     # Make sure the topic belongs to the current user.
     check_topic_owner(request, topic)
+    # code in check_topic_owner()
     # if topic.owner != request.user:
     #     raise Http404
     entries = topic.entry_set.order_by('-date_added')
@@ -57,7 +67,8 @@ def new_topic(request):
 @login_required
 def new_entry(request, topic_id):
     """Add a new entry for a particular topic."""
-    topic = Topic.objects.get(id=topic_id)
+    # topic = Topic.objects.get(id=topic_id)
+    topic = get_object_or_404(Topic, id=topic_id)
     check_topic_owner(request, topic)
     
     if request.method != 'POST':
@@ -79,12 +90,13 @@ def new_entry(request, topic_id):
 @login_required
 def edit_entry(request, entry_id):
     """Edit an existing entry."""
-    entry = Entry.objects.get(id=entry_id)
+    # entry = Entry.objects.get(id=entry_id)
+    entry = get_object_or_404(Entry, id=entry_id)
     topic = entry.topic
     check_topic_owner(request, topic)
+    # code in check_topic_owner()
     # if topic.owner != request.user:
     #     raise Http404
-
     if request.method != 'POST':
         # Initial request; pre-fill form with the current entry.
         form = EntryForm(instance=entry)
@@ -97,66 +109,3 @@ def edit_entry(request, entry_id):
 
     context = {'entry': entry, 'topic': topic, 'form': form}
     return render(request, 'learning_logs/edit_entry.html', context)
-    
-def check_topic_owner(request, topic):
-    """Check owner of topic."""
-    if topic.owner != request.user:
-        raise Http404
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
